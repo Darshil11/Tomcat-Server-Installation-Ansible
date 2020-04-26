@@ -277,5 +277,11 @@ NOTE: To execute Jenkins pipline for Ansible deployment it is requiresd to Insta
 * Jenkins file has two stages  1) Checkout 2) InstallTomcat
 * During checkout stage code/role will be checkout on Jenkins server and after that using ansible playbook tomcat server will be          deployed on the host mentioned in ansible host file.
 
-![tomcat_Jenkins](TomcatServerVerification/Tomcat_Jenkins.PNG)
+![tomcat_Jenkins](TomcatServerVerification/log1.PNG)
+
+![tomcat_Jenkins](TomcatServerVerification/log2.PNG)
+
+![tomcat_Jenkins](TomcatServerVerification/log3.PNG)
+
+![tomcat_Jenkins](TomcatServerVerification/log4.PNG)
 
