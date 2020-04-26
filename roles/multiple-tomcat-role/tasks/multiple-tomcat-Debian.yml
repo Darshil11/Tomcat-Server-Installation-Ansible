@@ -1,0 +1,162 @@
+- name: Ensure the system can use the HTTPS transport for APT.
+  stat:
+    path: /usr/lib/apt/methods/https
+  register: apt_https_transport
+
+- name: Install APT HTTPS transport.
+  apt:
+    name: "apt-transport-https"
+    state: present
+    update_cache: yes
+  when: not apt_https_transport.stat.exists
+
+- name: Install basic packages
+  package:
+    name: ['vim','aptitude','bash-completion','tmux','tree','htop','wget','unzip','curl','git']
+    state: present
+    update_cache: yes
+
+- name: Install Default Java (Debian/Ubuntu)
+  apt:
+    name: default-jdk
+    state: present
+
+- name: Add "{{ tomcat_instance1_name }}" group
+  group:
+    name: "{{ tomcat_instance1_name }}"
+
+- name: Add "{{ tomcat_instance2_name }}" group
+  group:
+    name: "{{ tomcat_instance2_name }}"
+
+
+- name: Add "{{ tomcat_instance1_name }}" user
+  user:
+    name: "{{ tomcat_instance1_name }}"
+    group: "{{ tomcat_instance1_name }}"
+    home: "{{ tomcat_instance1_install_path }}/{{ tomcat_instance1_name }}"
+    createhome: no
+    system: yes
+
+- name: Add "{{ tomcat_instance2_name }}" user
+  user:
+    name: "{{ tomcat_instance2_name }}"
+    group: "{{ tomcat_instance2_name }}"
+    home: "{{ tomcat_instance2_install_path }}/{{ tomcat_instance2_name }}"
+    createhome: no
+    system: yes
+
+
+- name: Download Tomcat
+  get_url:
+    url: "{{ tomcat_archive_url }}"
+    dest: "{{ tomcat_archive_dest }}"
+
+- name: Create a tomcat1 directory
+  file:
+    path: "{{ tomcat_instance1_install_path }}/{{ tomcat_instance1_name }}"
+    state: directory
+    owner: "{{ tomcat_instance1_name }}"
+    group: "{{ tomcat_instance1_name }}"
+
+- name: Create a "{{ tomcat_instance2_name }}" directory
+  file:
+    path: "{{ tomcat_instance2_install_path }}/{{ tomcat_instance2_name }}"
+    state: directory
+    owner: "{{ tomcat_instance2_name }}"
+    group: "{{ tomcat_instance2_name }}"
+
+
+- name: Extract "{{ tomcat_instance1_name }}" archive
+  unarchive:
+    src: "{{ tomcat_archive_dest }}"
+    dest: "{{ tomcat_instance1_install_path }}/{{ tomcat_instance1_name }}"
+    owner: "{{ tomcat_instance1_name }}"
+    group: "{{ tomcat_instance1_name }}"
+    remote_src: yes
+    extra_opts: "--strip-components=1"
+    creates: "{{ tomcat_instance1_install_path }}/{{ tomcat_instance1_name }}/bin"
+
+- name: Extract "{{ tomcat_instance2_name }}" archive
+  unarchive:
+    src: "{{ tomcat_archive_dest }}"
+    dest: "{{ tomcat_instance2_install_path }}/{{ tomcat_instance2_name }}"
+    owner: "{{ tomcat_instance2_name }}"
+    group: "{{ tomcat_instance2_name }}"
+    remote_src: yes
+    extra_opts: "--strip-components=1"
+    creates: "{{ tomcat_instance2_install_path }}/{{ tomcat_instance2_name }}/bin"
+
+- name: Copy "{{ tomcat_instance1_name }}" service file
+  template:
+    src: templates/tomcat.instance1.service.j2
+    dest: "/etc/systemd/system/{{ tomcat_instance1_name }}.service"
+  when: ansible_service_mgr == "systemd"
+
+- name: Copy "{{ tomcat_instance2_name }}" service file
+  template:
+    src: templates/tomcat.instance2.service.j2
+    dest: "/etc/systemd/system/{{ tomcat_instance2_name }}.service"
+  when: ansible_service_mgr == "systemd"
+
+- name: Copy "{{ tomcat_instance1_name }}" server file
+  template:
+    src: templates/tomcat-server-instance1.xml.j2
+    dest: "{{ tomcat_instance1_install_path }}/{{ tomcat_instance1_name }}/conf/server.xml"
+  when: ansible_service_mgr == "systemd"
+
+- name: Copy "{{ tomcat_instance2_name }}" service file
+  template:
+    src: templates/tomcat-server-instance2.xml.j2
+    dest: "{{ tomcat_instance2_install_path }}/{{ tomcat_instance2_name }}/conf/server.xml"
+  when: ansible_service_mgr == "systemd"
+
+
+
+- name: Start and enable "{{ tomcat_instance1_name }}"
+  service:
+    daemon_reload: yes
+    name: "{{ tomcat_instance1_name }}"
+    state: started
+    enabled: yes
+  when: ansible_service_mgr == "systemd"
+
+- name: Start and enable "{{ tomcat_instance2_name }}"
+  service:
+    daemon_reload: yes
+    name: "{{ tomcat_instance2_name }}"
+    state: started
+    enabled: yes
+  when: ansible_service_mgr == "systemd"
+
+- name: Set UI access credentials for "{{ tomcat_instance1_name }}"
+  template:
+    src: tomcat-users.xml.j2
+    dest: "{{ tomcat_instance1_install_path }}/{{ tomcat_instance1_name }}/conf/tomcat-users.xml"
+  notify: restart "{{ tomcat_instance1_name }}"
+
+- name: Set UI access credentials for "{{ tomcat_instance2_name }}"
+  template:
+    src: tomcat-users.xml.j2
+    dest: "{{ tomcat_instance2_install_path }}/{{ tomcat_instance2_name }}/conf/tomcat-users.xml"
+  notify: restart "{{ tomcat_instance2_name }}"
+
+
+- name: Allow access to Manager and Host Manager apps from any IP
+  template:
+    src: context.xml.j2
+    dest: "{{ item }}"
+  with_items:
+    - "{{ tomcat_instance1_install_path }}/{{ tomcat_instance1_name }}/webapps/host-manager/META-INF/context.xml"
+    - "{{ tomcat_instance1_install_path }}/{{ tomcat_instance1_name }}/webapps/manager/META-INF/context.xml"
+  notify: restart "{{ tomcat_instance1_name }}"
+
+- name: Allow access to Manager and Host Manager apps from any IP
+  template:
+    src: context.xml.j2
+    dest: "{{ item }}"
+  with_items:
+    - "{{ tomcat_instance2_install_path }}/{{ tomcat_instance2_name }}/webapps/host-manager/META-INF/context.xml"
+    - "{{ tomcat_instance2_install_path }}/{{ tomcat_instance2_name }}/webapps/manager/META-INF/context.xml"
+  notify: restart "{{ tomcat_instance2_name }}"
+

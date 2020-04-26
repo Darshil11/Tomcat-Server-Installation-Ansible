@@ -1,0 +1,30 @@
+---
+- name: Multiple Tomcat deployment playbook
+  hosts: ansible-tomcat-nodes       # Inventory hosts group / server to act on
+  become: yes               # If to escalate privilege
+  become_method: sudo       # Set become method
+  remote_user: root         # Update username for remote server
+  vars:
+    tomcat_instance1_name: tomcat1
+    tomcat_instance1_install_path: /opt
+    tomcat_instance1_port_connector: 8080
+    tomcat_instance1_port_shutdown: 8005
+    tomcat_instance1_port_redirect: 8443
+    tomcat_instance1_port_ajp: 8009
+    tomcat_instance1_port_debug: 8000
+    tomcat_instance2_install_path: /opt
+    tomcat_instance2_name: tomcat2
+    tomcat_instance2_port_connector: 8081
+    tomcat_instance2_port_shutdown: 8006
+    tomcat_instance2_port_redirect: 8444
+    tomcat_instance2_port_ajp: 8010
+    tomcat_instance2_port_debug: 8001
+    tomcat_ver: 9.0.30            # Tomcat version to install
+    user_manager: manager         # User who can access the UI manager section only
+    password_manager: manager     # UI manager user password
+    user_admin: admin             # User who can access bpth manager and admin UI sections
+    password_admin: admin         # UI admin password
+
+  roles:
+    - multiple-tomcat-role
+

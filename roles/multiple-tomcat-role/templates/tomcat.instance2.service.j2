@@ -1,0 +1,22 @@
+[Unit]
+Description={{ tomcat_instance2_name }}
+After=syslog.target network.target
+
+[Service]
+Type=forking
+
+User={{ tomcat_instance2_name }}
+Group={{ tomcat_instance2_name }}
+
+Environment=JAVA_HOME={{ JAVA_HOME }}
+Environment='JAVA_OPTS=-Djava.awt.headless=true'
+
+Environment=CATALINA_HOME={{ tomcat_instance2_install_path }}/{{ tomcat_instance2_name }}
+Environment=CATALINA_BASE={{ tomcat_instance2_install_path }}/{{ tomcat_instance2_name }}
+Environment=CATALINA_PID={{ tomcat_instance2_install_path }}/{{ tomcat_instance2_name }}/temp/tomcat.pid
+
+ExecStart={{ tomcat_instance2_install_path }}/{{ tomcat_instance2_name }}/bin/catalina.sh start
+ExecStop={{ tomcat_instance2_install_path }}/{{ tomcat_instance2_name }}/bin/catalina.sh stop
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+- name: restart "{{ tomcat_instance1_name }}"
+  service:
+    name: "{{ tomcat_instance1_name }}"
+    state: restarted
+
+- name: restart "{{ tomcat_instance2_name }}"
+  service:
+    name: "{{ tomcat_instance2_name }}"
+    state: restarted
+

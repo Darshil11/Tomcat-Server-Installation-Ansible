@@ -1,0 +1,2 @@
+[ansible-tomcat-nodes]
+localhost # Add Server IP address, one line per server
