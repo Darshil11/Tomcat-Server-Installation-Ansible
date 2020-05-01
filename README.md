@@ -35,7 +35,7 @@ ansible --version
 
 ```
 git clone https://github.com/Darshil11/Tomcat-Server-Installation-Ansible.git
-cd multiple-tomcat
+cd Tomcat-Server-Installation-Ansible
 ```
 
 * By default Ansible will execute the installation on local host if you want to install on other servers change the IP of server in  hosts file.
